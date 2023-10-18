@@ -7,7 +7,7 @@ import (
 )
 
 // Change to true if needed.
-var taskWithAsteriskIsCompleted = false
+var taskWithAsteriskIsCompleted = true
 
 var text = `Как видите, он  спускается  по  лестнице  вслед  за  своим
 	другом   Кристофером   Робином,   головой   вниз,  пересчитывая
@@ -42,6 +42,10 @@ var text = `Как видите, он  спускается  по  лестни�
 	иногда,  особенно  когда  папа  дома,  он больше любит тихонько
 	посидеть у огня и послушать какую-нибудь интересную сказку.
 		В этот вечер...`
+
+var textDashes = `---- ---- - - - -- abc abc-- abc-. ab.c qwe "qwe" 'qwe' луг луг,! лу,г !луг#`
+
+var textSinglePunct = `. , - - ! : " ' \`
 
 func TestTop10(t *testing.T) {
 	t.Run("no words in empty string", func(t *testing.T) {
@@ -78,5 +82,26 @@ func TestTop10(t *testing.T) {
 			}
 			require.Equal(t, expected, Top10(text))
 		}
+	})
+
+	t.Run("positive test: string with dashes length", func(t *testing.T) {
+		require.Len(t, Top10(textDashes), 7)
+	})
+
+	t.Run("positive test: string with dashes", func(t *testing.T) {
+		expected := []string{
+			"abc",  // 3
+			"qwe",  // 3
+			"луг",  // 3
+			"----", // 2
+			"--",   // 1
+			"ab.c", // 1
+			"лу,г", // 1
+		}
+		require.Equal(t, expected, Top10(textDashes))
+	})
+
+	t.Run("string with single non-letter characters", func(t *testing.T) {
+		require.Len(t, Top10(textSinglePunct), 0)
 	})
 }
