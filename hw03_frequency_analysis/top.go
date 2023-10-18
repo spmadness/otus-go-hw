@@ -20,12 +20,7 @@ func Top10(s string) []string {
 			continue
 		}
 		w := strings.ToLower(match[1])
-		val, ok := m[w]
-		if !ok {
-			m[w] = 1
-			continue
-		}
-		m[w] = val + 1
+		m[w]++
 	}
 
 	keys := make([]string, 0, len(words))
