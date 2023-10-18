@@ -9,6 +9,8 @@ import (
 
 var ErrInvalidString = errors.New("invalid string")
 
+const unicodeValueBackslash = 92
+
 func Unpack(s string) (string, error) {
 	var b strings.Builder
 	var sbuf int // количество слэшей до текущего символа
@@ -24,12 +26,12 @@ func Unpack(s string) (string, error) {
 	for i, j := 0, 1; i < len(r); i, j = i+1, j+1 {
 		cur = r[i]
 		// если текущая цифра неэкранирована - ошибка
-		if isDigit(cur) && sbuf == 0 {
+		if isUnescapedDigit(cur, sbuf) {
 			return "", ErrInvalidString
 		}
 		// если i еще попадает в слайс рун, а j - уже нет
 		if j == len(r) {
-			if !isSlash(cur) || sbuf > 0 {
+			if canWriteLastCharacter(cur, sbuf) {
 				b.WriteString(string(cur))
 			}
 			break
@@ -38,11 +40,11 @@ func Unpack(s string) (string, error) {
 		next = r[j]
 
 		// из условия задачи - экранировать можно только цифру или слэш
-		if isSlash(cur) && !isSlash(next) && !isDigit(next) {
+		if isInvalidEscapeSequence(cur, next) {
 			return "", ErrInvalidString
 		}
 
-		if isSlash(cur) && (isSlash(next) || isDigit(next) && sbuf == 0) {
+		if canIncreaseSlashBuffer(cur, next, sbuf) {
 			sbuf++
 			continue
 		}
@@ -50,7 +52,7 @@ func Unpack(s string) (string, error) {
 		// исходя из логики дефолтных тест-кейсов:
 		// если слэшей в буфере больше одного, тогда пишем текущий слэш и следующую цифру как одиночный символ
 		// если слэш в буфере один - значит текущий слэш можно обработать с множителем, и мы идем дальше
-		if isSlash(cur) && isDigit(next) && sbuf > 1 {
+		if isMultiSlashSequence(cur, next, sbuf) {
 			b.WriteString(string(cur))
 			b.WriteString(string(next))
 			// после записей, переход на позицию после записанной одиночной цифры
@@ -61,7 +63,7 @@ func Unpack(s string) (string, error) {
 		}
 
 		// запись повторяющихся символов
-		if isDigit(next) {
+		if unicode.IsDigit(next) {
 			d, err := strconv.Atoi(string(next))
 			if err != nil {
 				return "", ErrInvalidString
@@ -82,10 +84,26 @@ func Unpack(s string) (string, error) {
 	return b.String(), nil
 }
 
-func isSlash(r rune) bool {
-	return r == 92 // значение слэша в unicode
+func canWriteLastCharacter(cur rune, sbuf int) bool {
+	return !isSlash(cur) || sbuf > 0
 }
 
-func isDigit(r rune) bool {
-	return unicode.IsDigit(r)
+func canIncreaseSlashBuffer(cur, next rune, sbuf int) bool {
+	return isSlash(cur) && (isSlash(next) || unicode.IsDigit(next) && sbuf == 0)
+}
+
+func isMultiSlashSequence(cur, next rune, sbuf int) bool {
+	return isSlash(cur) && unicode.IsDigit(next) && sbuf > 1
+}
+
+func isUnescapedDigit(cur rune, sbuf int) bool {
+	return unicode.IsDigit(cur) && sbuf == 0
+}
+
+func isInvalidEscapeSequence(cur, next rune) bool {
+	return isSlash(cur) && !isSlash(next) && !unicode.IsDigit(next)
+}
+
+func isSlash(r rune) bool {
+	return r == unicodeValueBackslash
 }
