@@ -48,4 +48,57 @@ func TestList(t *testing.T) {
 		}
 		require.Equal(t, []int{70, 80, 60, 40, 10, 30, 50}, elems)
 	})
+
+	t.Run("push front elements order is reversed in list", func(t *testing.T) {
+		l := NewList()
+
+		l.PushFront(10) // [10]
+		l.PushFront(20) // [20, 10]
+		l.PushFront(30) // [30, 20, 10]
+
+		require.Equal(t, 3, l.Len())
+		require.Equal(t, 30, l.Front().Value)
+		require.Equal(t, 10, l.Back().Value)
+	})
+
+	t.Run("move last element to front", func(t *testing.T) {
+		l := NewList()
+
+		l.PushBack(10) // [10]
+		l.PushBack(20) // [10, 20]
+		l.PushBack(30) // [10, 20, 30]
+		require.Equal(t, 3, l.Len())
+		require.Equal(t, 10, l.Front().Value)
+
+		l.MoveToFront(l.Back()) // [30, 10, 20]
+		require.Equal(t, 30, l.Front().Value)
+		require.Equal(t, 20, l.Back().Value)
+	})
+
+	t.Run("remove elements", func(t *testing.T) {
+		l := NewList()
+
+		l.PushBack(10) // [10]
+		l.PushBack(20) // [10, 20]
+		l.PushBack(30) // [10, 20, 30]
+		l.PushBack(40) // [10, 20, 30, 40]
+		l.PushBack(50) // [10, 20, 30, 40, 50]
+		require.Equal(t, 5, l.Len())
+
+		l.Remove(l.Front().Next) // [10, 30, 40, 50]
+		l.Remove(l.Back().Prev)  // [10, 30, 50]
+
+		require.Equal(t, 3, l.Len())
+		require.Equal(t, 10, l.Front().Value)
+		require.Equal(t, 30, l.Front().Next.Value)
+		require.Equal(t, 50, l.Back().Value)
+
+		l.Remove(l.Back()) // [10, 30]
+		l.Remove(l.Back()) // [10]
+		l.Remove(l.Back()) // []
+
+		require.Equal(t, 0, l.Len())
+		require.Nil(t, l.Front())
+		require.Nil(t, l.Back())
+	})
 }
