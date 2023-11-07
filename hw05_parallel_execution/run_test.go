@@ -67,4 +67,56 @@ func TestRun(t *testing.T) {
 		require.Equal(t, runTasksCount, int32(tasksCount), "not all tasks were completed")
 		require.LessOrEqual(t, int64(elapsedTime), int64(sumTime/2), "tasks were run sequentially?")
 	})
+
+	t.Run("tasks length is 0", func(t *testing.T) {
+		tasks := make([]Task, 0, 50)
+
+		workersCount := 10
+		maxErrorsCount := 1
+		err := Run(tasks, workersCount, maxErrorsCount)
+
+		require.Truef(t, errors.Is(err, ErrTasksSliceIsEmpty), "actual err - %v", err)
+	})
+
+	t.Run("tasks length is less than capacity", func(t *testing.T) {
+		tasksCapacity := 50
+		tasksLength := 20
+
+		tasks := make([]Task, 0, tasksCapacity)
+
+		var runTasksCount int32
+
+		for i := 0; i < tasksLength; i++ {
+			tasks = append(tasks, func() error {
+				atomic.AddInt32(&runTasksCount, 1)
+				return nil
+			})
+		}
+
+		workersCount := 5
+		maxErrorsCount := 1
+
+		err := Run(tasks, workersCount, maxErrorsCount)
+		require.NoError(t, err)
+
+		require.Equal(t, runTasksCount, int32(tasksLength), "not all actual tasks were completed")
+	})
+
+	t.Run("workers value less than 1", func(t *testing.T) {
+		tasks := make([]Task, 0, 50)
+		workersCount := 0
+		maxErrorsCount := 1
+		err := Run(tasks, workersCount, maxErrorsCount)
+
+		require.Truef(t, errors.Is(err, ErrWorkersValueTooSmall), "actual err - %v", err)
+	})
+
+	t.Run("maxErrorsCount less than 1", func(t *testing.T) {
+		tasks := make([]Task, 0, 50)
+		workersCount := 10
+		maxErrorsCount := 0
+		err := Run(tasks, workersCount, maxErrorsCount)
+
+		require.Truef(t, errors.Is(err, ErrErrorsLimitExceeded), "actual err - %v", err)
+	})
 }
