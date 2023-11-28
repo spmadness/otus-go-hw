@@ -90,4 +90,75 @@ func TestPipeline(t *testing.T) {
 		require.Len(t, result, 0)
 		require.Less(t, int64(elapsed), int64(abortDur)+int64(fault))
 	})
+
+	t.Run("no data passed", func(t *testing.T) {
+		in := make(Bi)
+
+		go func() {
+			time.Sleep(100 * time.Millisecond)
+			close(in)
+		}()
+
+		result := make([]string, 0, 10)
+		for s := range ExecutePipeline(in, nil, stages...) {
+			result = append(result, s.(string))
+		}
+
+		require.Equal(t, []string{}, result)
+	})
+
+	t.Run("no stages passed", func(t *testing.T) {
+		in := make(Bi)
+		data := []int{1, 2, 3, 4, 5}
+
+		go injectTestValues(in, data)
+
+		result := make([]string, 0, 10)
+		for s := range ExecutePipeline(in, nil) {
+			result = append(result, s.(string))
+		}
+
+		require.Equal(t, []string{}, result)
+	})
+
+	t.Run("nil stages passed", func(t *testing.T) {
+		in := make(Bi)
+		data := []int{1, 2, 3, 4, 5}
+
+		go injectTestValues(in, data)
+
+		result := make([]int, 0, 10)
+		for s := range ExecutePipeline(in, nil, nil, nil, nil, nil) {
+			result = append(result, s.(int))
+		}
+
+		require.Equal(t, []int{1, 2, 3, 4, 5}, result)
+	})
+
+	t.Run("mixed nil and normal stages passed", func(t *testing.T) {
+		in := make(Bi)
+		data := []int{1, 2, 3, 4, 5}
+
+		go injectTestValues(in, data)
+
+		result := make([]string, 0, 10)
+		start := time.Now()
+		mixedStages := []Stage{nil, stages[1], nil, stages[3]}
+		for s := range ExecutePipeline(in, nil, mixedStages...) {
+			result = append(result, s.(string))
+		}
+		elapsed := time.Since(start)
+
+		require.Equal(t, []string{"2", "4", "6", "8", "10"}, result)
+		require.Less(t,
+			int64(elapsed),
+			int64(sleepPerStage)*int64((len(stages)-2)+len(data)-1)+int64(fault))
+	})
+}
+
+func injectTestValues(in Bi, data []int) {
+	for _, v := range data {
+		in <- v
+	}
+	close(in)
 }
