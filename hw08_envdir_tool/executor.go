@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 )
@@ -20,6 +19,10 @@ func RunCmd(cmd []string, env Environment) (returnCode int) {
 
 	c := exec.Command(cmd[0], args...)
 
+	c.Stdin = os.Stdin
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+
 	for k, v := range env {
 		envV := v.Value
 
@@ -37,11 +40,10 @@ func RunCmd(cmd []string, env Environment) (returnCode int) {
 		}
 	}
 
-	out, err := c.Output()
+	err := c.Run()
 	if err != nil {
 		return 1
 	}
-	fmt.Printf("%s", out)
 
 	return 0
 }
