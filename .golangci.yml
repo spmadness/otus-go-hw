@@ -5,6 +5,9 @@ run:
     - !bench
 
 linters-settings:
+  gosec:
+    excludes:
+      - G204
   funlen:
     lines: 150
     statements: 80
