@@ -1,0 +1,36 @@
+goos: linux
+goarch: amd64
+pkg: github.com/spmadness/otus-go-hw/hw10_program_optimization
+cpu: AMD Ryzen 7 5800H with Radeon Graphics         
+BenchmarkGetUsers-16         	    5005	    228431 ns/op	    9273 B/op	     121 allocs/op
+BenchmarkGetUsers-16         	    5059	    232128 ns/op	    9217 B/op	     119 allocs/op
+BenchmarkGetUsers-16         	    5104	    226643 ns/op	    9172 B/op	     118 allocs/op
+BenchmarkGetUsers-16         	    4945	    231734 ns/op	    9335 B/op	     122 allocs/op
+BenchmarkGetUsers-16         	    5064	    231191 ns/op	    9212 B/op	     119 allocs/op
+BenchmarkGetUsers-16         	    5102	    229324 ns/op	    9174 B/op	     118 allocs/op
+BenchmarkGetUsers-16         	    4964	    230176 ns/op	    9315 B/op	     122 allocs/op
+BenchmarkGetUsers-16         	    4959	    231417 ns/op	    9321 B/op	     122 allocs/op
+BenchmarkGetUsers-16         	    4916	    227245 ns/op	    9366 B/op	     123 allocs/op
+BenchmarkGetUsers-16         	    4957	    228547 ns/op	    9323 B/op	     122 allocs/op
+BenchmarkCountDomains-16     	     170	   6955918 ns/op	  559483 B/op	   22207 allocs/op
+BenchmarkCountDomains-16     	     175	   6818608 ns/op	  559488 B/op	   22208 allocs/op
+BenchmarkCountDomains-16     	     174	   6743279 ns/op	  559760 B/op	   22208 allocs/op
+BenchmarkCountDomains-16     	     174	   6973886 ns/op	  559715 B/op	   22208 allocs/op
+BenchmarkCountDomains-16     	     172	   6857874 ns/op	  559489 B/op	   22208 allocs/op
+BenchmarkCountDomains-16     	     174	   6891143 ns/op	  559620 B/op	   22207 allocs/op
+BenchmarkCountDomains-16     	     171	   7052754 ns/op	  559512 B/op	   22208 allocs/op
+BenchmarkCountDomains-16     	     166	   6907516 ns/op	  559904 B/op	   22207 allocs/op
+BenchmarkCountDomains-16     	     170	   7140221 ns/op	  560383 B/op	   22208 allocs/op
+BenchmarkCountDomains-16     	     172	   6971452 ns/op	  559884 B/op	   22207 allocs/op
+BenchmarkGetDomainStat-16    	    4904	    231212 ns/op	    9584 B/op	     130 allocs/op
+BenchmarkGetDomainStat-16    	    4798	    231400 ns/op	    9704 B/op	     132 allocs/op
+BenchmarkGetDomainStat-16    	    4720	    234336 ns/op	    9795 B/op	     135 allocs/op
+BenchmarkGetDomainStat-16    	    4321	    236071 ns/op	   10314 B/op	     147 allocs/op
+BenchmarkGetDomainStat-16    	    4975	    231011 ns/op	    9507 B/op	     128 allocs/op
+BenchmarkGetDomainStat-16    	    4923	    229256 ns/op	    9563 B/op	     129 allocs/op
+BenchmarkGetDomainStat-16    	    4852	    234430 ns/op	    9642 B/op	     131 allocs/op
+BenchmarkGetDomainStat-16    	    4845	    242135 ns/op	    9650 B/op	     131 allocs/op
+BenchmarkGetDomainStat-16    	    4714	    249782 ns/op	    9802 B/op	     135 allocs/op
+BenchmarkGetDomainStat-16    	    4572	    239154 ns/op	    9977 B/op	     139 allocs/op
+PASS
+ok  	github.com/spmadness/otus-go-hw/hw10_program_optimization	103.612s

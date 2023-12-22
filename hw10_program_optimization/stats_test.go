@@ -1,9 +1,11 @@
+//go:build !bench
 // +build !bench
 
 package hw10programoptimization
 
 import (
 	"bytes"
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -36,4 +38,23 @@ func TestGetDomainStat(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, DomainStat{}, result)
 	})
+
+	t.Run("invalid json given", func(t *testing.T) {
+		var jsErr *json.SyntaxError
+		data = `{"Id":1,"Name":"Howard Mendoza","Username":"0Oliver","Email":"`
+
+		_, err := GetDomainStat(bytes.NewBufferString(data), "biz")
+		require.ErrorAsf(t, err, &jsErr, "error: %s, target: %s", err, &jsErr)
+	})
+
+	t.Run("nil reader given", func(t *testing.T) {
+		_, err := GetDomainStat(nil, "biz")
+		require.ErrorIsf(t, err, ErrNilReader, "error: %s, target: %s", err, ErrNilReader)
+	})
+
+	t.Run("empty reader data given", func(t *testing.T) {
+		_, err := GetDomainStat(bytes.NewBufferString(""), "biz")
+		require.ErrorIsf(t, err, ErrEmptySourceData, "error: %s, target: %s", err, ErrEmptySourceData)
+	})
+
 }
