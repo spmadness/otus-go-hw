@@ -17,6 +17,10 @@ linters-settings:
         allow:
           - $gostd
           - github.com/stretchr/testify
+          - github.com/spmadness/otus-go-hw
+          - github.com/google/uuid
+          - github.com/jackc/pgx/stdlib
+          - github.com/spf13/viper
 
 issues:
   exclude-rules:
