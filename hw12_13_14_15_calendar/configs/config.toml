@@ -1,5 +1,14 @@
 [logger]
-level = "INFO"
+level = "DEBUG"
 
-# TODO
-# ...
+[storage]
+mode = "sql" # valid values are "sql", "in-memory"
+user = "user"
+password = "password_1337"
+host = "127.0.0.1"
+port = 5432
+name = "calendar"
+
+[server]
+host = "localhost"
+port = 8080

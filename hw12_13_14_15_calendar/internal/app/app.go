@@ -1,26 +1,46 @@
 package app
 
 import (
-	"context"
+	"github.com/spmadness/otus-go-hw/hw12_13_14_15_calendar/internal/storage"
+	memorystorage "github.com/spmadness/otus-go-hw/hw12_13_14_15_calendar/internal/storage/memory"
+	sqlstorage "github.com/spmadness/otus-go-hw/hw12_13_14_15_calendar/internal/storage/sql"
 )
 
-type App struct { // TODO
+const (
+	DBModeSQL      = "sql"
+	DBModeInMemory = "in-memory"
+)
+
+type App struct {
+	logger  Logger
+	storage Storage
 }
 
-type Logger interface { // TODO
-}
+type Logger interface{}
 
-type Storage interface { // TODO
+type Storage interface {
+	CreateEvent(event storage.Event) error
+	UpdateEvent(id string, event storage.Event) error
+	DeleteEvent(id string) error
+	ListEventDay(date string) ([]storage.Event, error)
+	ListEventWeek(date string) ([]storage.Event, error)
+	ListEventMonth(date string) ([]storage.Event, error)
 }
 
 func New(logger Logger, storage Storage) *App {
-	return &App{}
+	return &App{
+		logger:  logger,
+		storage: storage,
+	}
 }
 
-func (a *App) CreateEvent(ctx context.Context, id, title string) error {
-	// TODO
-	return nil
-	// return a.storage.CreateEvent(storage.Event{ID: id, Title: title})
+func NewStorage(mode string, dsn string) Storage {
+	var s Storage
+	if mode == DBModeSQL {
+		s = sqlstorage.New(dsn)
+	}
+	if mode == DBModeInMemory {
+		s = memorystorage.New()
+	}
+	return s
 }
-
-// TODO
