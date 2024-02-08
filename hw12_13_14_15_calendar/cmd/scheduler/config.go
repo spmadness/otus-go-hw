@@ -7,36 +7,32 @@ import (
 	"github.com/spf13/viper"
 )
 
-// При желании конфигурацию можно вынести в internal/config.
-// Организация конфига в main принуждает нас сужать API компонентов, использовать
-// при их конструировании только необходимые параметры, а также уменьшает вероятность циклической зависимости.
 type Config struct {
-	Logger  LoggerConf
+	Broker  MessageBrokerConf
 	Storage StorageConf
-	Server  ServerConf
+	Logger  LoggerConf
 }
 
 type LoggerConf struct {
 	Level string
 }
 
-type StorageConf struct {
+type MessageBrokerConf struct {
 	User     string
 	Password string
 	Host     string
 	Port     int
-	Name     string
-	Mode     string
+	Queue    string
 }
 
-type ServerConf struct {
-	HTTP struct {
-		Host string
-		Port int
-	}
-	GRPC struct {
-		Port int
-	}
+type StorageConf struct {
+	User              string
+	Password          string
+	Host              string
+	Port              int
+	Name              string
+	PollTimeSeconds   int `mapstructure:"poll_time_seconds"`
+	OutdatedEventDays int `mapstructure:"outdated_event_days"`
 }
 
 func NewConfig(configFile string) Config {
@@ -55,11 +51,22 @@ func NewConfig(configFile string) Config {
 		os.Exit(1)
 	}
 
+	if config.Storage.PollTimeSeconds < 1 {
+		fmt.Println("poll_time_seconds parameter must be > 0")
+		os.Exit(1)
+	}
+
+	if config.Storage.OutdatedEventDays < 1 {
+		fmt.Println("outdated_event_days parameter must be > 0")
+		os.Exit(1)
+	}
+
 	return config
 }
 
-func (c Config) HTTPServerAddress() string {
-	return fmt.Sprintf("%s:%d", c.Server.HTTP.Host, c.Server.HTTP.Port)
+func (c Config) BrokerConnectionString() string {
+	return fmt.Sprintf("amqp://%s:%s@%s:%d/",
+		c.Broker.User, c.Broker.Password, c.Broker.Host, c.Broker.Port)
 }
 
 func (c Config) StorageConnectionString() string {

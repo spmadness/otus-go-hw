@@ -1,0 +1,18 @@
+[logger]
+level = "DEBUG"
+
+[storage]
+user = "user"
+password = "password_1337"
+host = "127.0.0.1"
+port = 5432
+name = "calendar"
+poll_time_seconds = 5
+outdated_event_days = 365
+
+[broker]
+user = "rmuser"
+password = "rmpassword"
+host = "127.0.0.1"
+port = 5672
+queue = "calendar_events"

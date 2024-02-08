@@ -17,7 +17,7 @@ import (
 var configFile string
 
 func init() {
-	flag.StringVar(&configFile, "config", "/etc/calendar/config.toml", "Path to configuration file")
+	flag.StringVar(&configFile, "config", "./configs/config_calendar.toml", "Path to configuration file")
 }
 
 func main() {
@@ -31,9 +31,9 @@ func main() {
 	config := NewConfig(configFile)
 	log := logger.New(config.Logger.Level)
 
-	storage := app.NewStorage(config.Storage.Mode, config.ConnectionString())
+	storage := app.NewStorage(config.Storage.Mode, config.StorageConnectionString())
 
-	err := setupStorage(storage)
+	err := storage.Open()
 	if err != nil {
 		log.Error("failed to open storage connection: " + err.Error())
 		return
@@ -54,7 +54,7 @@ func main() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 		defer cancel()
 
-		err := storage.Close(ctx)
+		err := storage.Close()
 		if err != nil {
 			log.Error("failed to close storage: " + err.Error())
 		}
@@ -77,16 +77,4 @@ func main() {
 		cancel()
 		os.Exit(1) //nolint:gocritic
 	}
-}
-
-func setupStorage(s app.Storager) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-	defer cancel()
-
-	err := s.Open(ctx)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

@@ -22,6 +22,8 @@ linters-settings:
           - github.com/jackc/pgx/stdlib
           - github.com/spf13/viper
           - github.com/go-playground/validator/v10
+          - github.com/rabbitmq/amqp091-go
+          - github.com/pkg/errors
 
 issues:
   exclude-rules:

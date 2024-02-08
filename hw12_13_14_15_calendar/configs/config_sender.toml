@@ -1,0 +1,9 @@
+[logger]
+level = "DEBUG"
+
+[broker]
+user = "rmuser"
+password = "rmpassword"
+host = "127.0.0.1"
+port = 5672
+queue = "calendar_events"

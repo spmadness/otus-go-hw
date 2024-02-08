@@ -17,7 +17,7 @@ type Storage struct {
 
 const QueryTimeout = time.Second * 3
 
-const selectFields = "select id, title, date_start, date_end, description, user_id, date_post"
+const selectFieldsFromEvents = "select id, title, date_start, date_end, description, user_id, date_post from events"
 
 func (s *Storage) CreateEvent(event storage.Event) error {
 	query := "insert into events (title, date_start, date_end, description, user_id, date_post) " +
@@ -80,7 +80,7 @@ func (s *Storage) DeleteEvent(id string) error {
 func (s *Storage) ListEventDay(date string) ([]storage.Event, error) {
 	var events []storage.Event
 
-	query := selectFields + " from events where DATE(date_start) = DATE($1)"
+	query := selectFieldsFromEvents + " where DATE(date_start) = DATE($1)"
 
 	ctx, cancel := context.WithTimeout(context.Background(), QueryTimeout)
 	defer cancel()
@@ -106,8 +106,8 @@ func (s *Storage) ListEventDay(date string) ([]storage.Event, error) {
 func (s *Storage) ListEventWeek(date string) ([]storage.Event, error) {
 	var events []storage.Event
 
-	query := selectFields + " from events " +
-		"where DATE(date_start) >= $1 and DATE(date_start) < DATE($1) + INTERVAL '7 DAY'"
+	query := selectFieldsFromEvents +
+		" where DATE(date_start) >= $1 and DATE(date_start) < DATE($1) + INTERVAL '7 DAY'"
 
 	ctx, cancel := context.WithTimeout(context.Background(), QueryTimeout)
 	defer cancel()
@@ -133,8 +133,8 @@ func (s *Storage) ListEventWeek(date string) ([]storage.Event, error) {
 func (s *Storage) ListEventMonth(date string) ([]storage.Event, error) {
 	var events []storage.Event
 
-	query := selectFields + " from events " +
-		"where DATE(date_start) >= $1 and DATE(date_start) < DATE($1) + INTERVAL '1 MONTH'"
+	query := selectFieldsFromEvents +
+		" where DATE(date_start) >= $1 and DATE(date_start) < DATE($1) + INTERVAL '1 MONTH'"
 
 	ctx, cancel := context.WithTimeout(context.Background(), QueryTimeout)
 	defer cancel()
@@ -160,7 +160,7 @@ func (s *Storage) ListEventMonth(date string) ([]storage.Event, error) {
 func (s *Storage) GetEvent(id string) (storage.Event, error) {
 	var e storage.Event
 
-	query := selectFields + " from events where id = $1"
+	query := selectFieldsFromEvents + " where id = $1"
 
 	ctx, cancel := context.WithTimeout(context.Background(), QueryTimeout)
 	defer cancel()
@@ -177,13 +177,57 @@ func (s *Storage) GetEvent(id string) (storage.Event, error) {
 	return e, nil
 }
 
+func (s *Storage) DeleteEventsBeforeDate(date string) error {
+	query := "delete from events where date_start < $1"
+
+	ctx, cancel := context.WithTimeout(context.Background(), QueryTimeout)
+	defer cancel()
+
+	_, err := s.Conn.ExecContext(ctx, query, date)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Storage) ListEventWithNotification() ([]storage.Event, error) {
+	var events []storage.Event
+
+	query := selectFieldsFromEvents +
+		" where date_post is not null and date_post < CURRENT_DATE"
+
+	ctx, cancel := context.WithTimeout(context.Background(), QueryTimeout)
+	defer cancel()
+
+	rows, err := s.Conn.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var e storage.Event
+		err = rows.Scan(&e.ID, &e.Title, &e.DateStart, &e.DateEnd, &e.Description, &e.UserID, &e.DatePost)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, e)
+	}
+
+	return events, nil
+}
+
 func New(dsn string) *Storage {
 	return &Storage{
 		dsn: dsn,
 	}
 }
 
-func (s *Storage) Open(ctx context.Context) error {
+func (s *Storage) Open() error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+
 	var err error
 	s.Conn, err = sql.Open("pgx", s.dsn)
 	if err != nil {
@@ -196,9 +240,7 @@ func (s *Storage) Open(ctx context.Context) error {
 	return nil
 }
 
-func (s *Storage) Close(ctx context.Context) error {
-	<-ctx.Done()
-
+func (s *Storage) Close() error {
 	err := s.Conn.Close()
 	if err != nil {
 		return err
