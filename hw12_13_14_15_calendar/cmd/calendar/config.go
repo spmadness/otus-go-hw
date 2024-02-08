@@ -30,8 +30,13 @@ type StorageConf struct {
 }
 
 type ServerConf struct {
-	Host string
-	Port int
+	HTTP struct {
+		Host string
+		Port int
+	}
+	GRPC struct {
+		Port int
+	}
 }
 
 func NewConfig(configFile string) Config {
@@ -53,11 +58,11 @@ func NewConfig(configFile string) Config {
 	return config
 }
 
-func (c Config) ServerAddress() string {
-	return fmt.Sprintf("%s:%d", c.Server.Host, c.Server.Port)
+func (c Config) HTTPServerAddress() string {
+	return fmt.Sprintf("%s:%d", c.Server.HTTP.Host, c.Server.HTTP.Port)
 }
 
 func (c Config) ConnectionString() string {
-	return fmt.Sprintf("host=%s port=%d user=%s password=%s",
-		c.Storage.Host, c.Storage.Port, c.Storage.User, c.Storage.Password)
+	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s",
+		c.Storage.Host, c.Storage.Port, c.Storage.User, c.Storage.Password, c.Storage.Name)
 }

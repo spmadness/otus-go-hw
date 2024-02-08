@@ -10,6 +10,7 @@ import (
 
 	"github.com/spmadness/otus-go-hw/hw12_13_14_15_calendar/internal/app"
 	"github.com/spmadness/otus-go-hw/hw12_13_14_15_calendar/internal/logger"
+	internalgrpc "github.com/spmadness/otus-go-hw/hw12_13_14_15_calendar/internal/server/grpc"
 	internalhttp "github.com/spmadness/otus-go-hw/hw12_13_14_15_calendar/internal/server/http"
 )
 
@@ -28,13 +29,20 @@ func main() {
 	}
 
 	config := NewConfig(configFile)
-	logg := logger.New(config.Logger.Level)
+	log := logger.New(config.Logger.Level)
 
 	storage := app.NewStorage(config.Storage.Mode, config.ConnectionString())
 
-	calendar := app.New(logg, storage)
+	err := setupStorage(storage)
+	if err != nil {
+		log.Error("failed to open storage connection: " + err.Error())
+		return
+	}
 
-	server := internalhttp.NewServer(logg, calendar, config.ServerAddress())
+	calendar := app.New(log, storage)
+
+	serverHTTP := internalhttp.NewServer(log, calendar, config.HTTPServerAddress())
+	serverGRPC := internalgrpc.NewServer(log, storage, config.Server.GRPC.Port)
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
@@ -46,16 +54,39 @@ func main() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 		defer cancel()
 
-		if err := server.Stop(ctx); err != nil {
-			logg.Error("failed to stop http server: " + err.Error())
+		err := storage.Close(ctx)
+		if err != nil {
+			log.Error("failed to close storage: " + err.Error())
 		}
+
+		if err := serverHTTP.Stop(ctx); err != nil {
+			log.Error("failed to stop http server: " + err.Error())
+		}
+
+		serverGRPC.Stop()
 	}()
 
-	logg.Info("calendar is running...")
+	go func() {
+		serverGRPC.Start()
+	}()
 
-	if err := server.Start(ctx); err != nil {
-		logg.Error("failed to start http server: " + err.Error())
+	log.Info("calendar is running...")
+
+	if err := serverHTTP.Start(ctx); err != nil {
+		log.Error("failed to start http server: " + err.Error())
 		cancel()
 		os.Exit(1) //nolint:gocritic
 	}
+}
+
+func setupStorage(s app.Storager) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+
+	err := s.Open(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

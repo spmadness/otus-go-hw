@@ -2,6 +2,40 @@ syntax = "proto3";
 
 package event;
 
+option go_package = "./;pb";
+
+service EventService {
+    rpc CreateEvent(Event) returns (Result);
+    rpc UpdateEvent(UpdateRequest) returns (Result);
+    rpc DeleteEvent(EventId) returns (Result);
+    rpc ListEventDay(ListDate) returns (Result);
+    rpc ListEventWeek(ListDate) returns (Result);
+    rpc ListEventMonth(ListDate) returns (Result);
+}
+
 message Event {
-    // TODO
+    string id = 1;
+    string title = 2;
+    string date_start = 3;
+    string date_end = 4;
+    string description = 5;
+    string user_id = 6;
+    string date_post = 7;
+}
+
+message UpdateRequest {
+    EventId id = 1;
+    Event event = 2;
+}
+
+message EventId {
+    string id = 1;
+}
+
+message ListDate {
+    string date_start = 1;
+}
+
+message Result {
+    repeated Event events = 1;
 }

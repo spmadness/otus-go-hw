@@ -9,6 +9,9 @@ host = "127.0.0.1"
 port = 5432
 name = "calendar"
 
-[server]
+[server.http]
 host = "localhost"
 port = 8080
+
+[server.grpc]
+port = 50051

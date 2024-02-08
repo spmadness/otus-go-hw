@@ -44,7 +44,7 @@ func TestStorage(t *testing.T) {
 		}
 
 		err := s.CreateEvent(e)
-		require.ErrorIs(t, err, ErrDateBusy)
+		require.ErrorIs(t, err, storage.ErrDateBusy)
 	})
 
 	t.Run("update success", func(t *testing.T) {
@@ -95,7 +95,7 @@ func TestStorage(t *testing.T) {
 
 		updateEvent := storage.Event{DateStart: "2022-10-10 00:02:15"}
 		err := s.UpdateEvent("1", updateEvent)
-		require.Error(t, err, ErrDateBusy)
+		require.Error(t, err, storage.ErrDateBusy)
 	})
 
 	t.Run("update fail: no event", func(t *testing.T) {
@@ -109,7 +109,7 @@ func TestStorage(t *testing.T) {
 
 		updateEvent := storage.Event{DateStart: "2023-01-01 10:00:00"}
 		err := s.UpdateEvent("2", updateEvent)
-		require.Error(t, err, ErrEventNotExist)
+		require.Error(t, err, storage.ErrEventNotExist)
 	})
 
 	t.Run("delete success", func(t *testing.T) {
@@ -133,7 +133,7 @@ func TestStorage(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = s.Event(id)
-		require.Error(t, err, ErrEventNotExist)
+		require.Error(t, err, storage.ErrEventNotExist)
 		require.True(t, len(s.eventsByID) == 0)
 		require.True(t, len(s.eventsByDateStart) == 0)
 		require.True(t, len(s.eventsByDay[dayTimeUnix]) == 0)
@@ -159,7 +159,7 @@ func TestStorage(t *testing.T) {
 
 		id = "2"
 		err := s.DeleteEvent(id)
-		require.Error(t, err, ErrEventNotExist)
+		require.Error(t, err, storage.ErrEventNotExist)
 	})
 }
 
@@ -317,7 +317,7 @@ func TestStorageMethodsConcurrency(t *testing.T) {
 					DateStart:   dateStartTime.Format(time.RFC3339),
 					DateEnd:     dateStartTime.Add(2 * time.Hour).Format(time.RFC3339),
 					Description: "Concurrent Event Description",
-					UserID:      1,
+					UserID:      "1",
 					DatePost:    time.Now().Format(time.RFC3339),
 				})
 			}(i)

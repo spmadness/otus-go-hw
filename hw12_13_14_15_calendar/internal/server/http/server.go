@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/spmadness/otus-go-hw/hw12_13_14_15_calendar/internal/app"
 )
 
 type Server struct {
@@ -19,7 +21,9 @@ type Logger interface {
 	Error(msg string)
 }
 
-type Application interface{}
+type Application interface {
+	GetStorage() app.Storager
+}
 
 func NewServer(logger Logger, app Application, address string) *Server {
 	return &Server{
@@ -31,11 +35,16 @@ func NewServer(logger Logger, app Application, address string) *Server {
 
 func (s *Server) Start(ctx context.Context) error {
 	go func() {
-		mux := http.NewServeMux()
+		mux := NewMux(s.app.GetStorage())
 
-		chain := loggingMiddleware(mux, s.logger)
+		mw := Middleware{
+			logger: s.logger,
+		}
 
-		mux.HandleFunc("/hello", helloHandler)
+		chain := MiddlewareChain(
+			mw.loggingMiddleware,
+			mw.requestValidatorMiddleware,
+		)(mux)
 
 		s.server = &http.Server{
 			Addr:              s.address,
@@ -44,7 +53,7 @@ func (s *Server) Start(ctx context.Context) error {
 			ReadHeaderTimeout: 2 * time.Second,
 		}
 
-		s.logger.Info(fmt.Sprintf("Server is running on http://%s", s.address))
+		s.logger.Info(fmt.Sprintf("starting http server on http://%s", s.address))
 		err := s.server.ListenAndServe()
 		if err != nil {
 			s.logger.Error(fmt.Sprintf("server error: %s", err))

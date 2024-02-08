@@ -1,7 +1,7 @@
 package memorystorage
 
 import (
-	"errors"
+	"context"
 	"sort"
 	"sync"
 	"time"
@@ -17,12 +17,6 @@ type Storage struct {
 	eventsByDay       map[int64][]storage.Event
 }
 
-var (
-	ErrEventDuplicateID = errors.New("duplicate event id in storage")
-	ErrEventNotExist    = errors.New("event not found in storage")
-	ErrDateBusy         = errors.New("event date start is busy")
-)
-
 func (s *Storage) CreateEvent(event storage.Event) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -30,14 +24,16 @@ func (s *Storage) CreateEvent(event storage.Event) error {
 	id := uuid.NewString()
 
 	if _, ok := s.eventsByID[id]; ok {
-		return ErrEventDuplicateID
+		return storage.ErrEventDuplicateID
 	}
 
 	e := event
 
 	if _, ok := s.eventsByDateStart[e.DateStart]; ok {
-		return ErrDateBusy
+		return storage.ErrDateBusy
 	}
+
+	e.ID = id
 
 	s.createEvent(id, e)
 
@@ -49,13 +45,13 @@ func (s *Storage) UpdateEvent(id string, event storage.Event) error {
 	defer s.mu.Unlock()
 
 	if _, ok := s.eventsByID[id]; !ok {
-		return ErrEventNotExist
+		return storage.ErrEventNotExist
 	}
 
 	e := event
 
 	if _, ok := s.eventsByDateStart[e.DateStart]; ok {
-		return ErrDateBusy
+		return storage.ErrDateBusy
 	}
 
 	s.deleteEvent(id, e)
@@ -70,12 +66,26 @@ func (s *Storage) DeleteEvent(id string) error {
 
 	e, ok := s.eventsByID[id]
 	if !ok {
-		return ErrEventNotExist
+		return storage.ErrEventNotExist
 	}
 
 	s.deleteEvent(id, *e)
 
 	return nil
+}
+
+func (s *Storage) GetEvent(id string) (storage.Event, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var e *storage.Event
+
+	e, ok := s.eventsByID[id]
+	if !ok {
+		return *e, storage.ErrEventNotExist
+	}
+
+	return *e, nil
 }
 
 func (s *Storage) ListEventDay(date string) ([]storage.Event, error) {
@@ -161,7 +171,7 @@ func (s *Storage) ListEventMonth(date string) ([]storage.Event, error) {
 func (s *Storage) Event(id string) (storage.Event, error) {
 	val, ok := s.eventsByID[id]
 	if !ok {
-		return storage.Event{}, ErrEventNotExist
+		return storage.Event{}, storage.ErrEventNotExist
 	}
 
 	return *val, nil
@@ -190,6 +200,18 @@ func (s *Storage) deleteEvent(id string, e storage.Event) {
 		s.eventsByDay[dayTimeUnix] = append(slice[:k], slice[k+1:]...)
 		break
 	}
+}
+
+func (s *Storage) Open(ctx context.Context) error {
+	<-ctx.Done()
+
+	return nil
+}
+
+func (s *Storage) Close(ctx context.Context) error {
+	<-ctx.Done()
+
+	return nil
 }
 
 func New() *Storage {
