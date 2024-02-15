@@ -6,6 +6,7 @@ require (
 	github.com/go-playground/validator/v10 v10.17.0
 	github.com/google/uuid v1.4.0
 	github.com/jackc/pgx v3.6.2+incompatible
+	github.com/rabbitmq/amqp091-go v1.9.0
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/grpc v1.59.0

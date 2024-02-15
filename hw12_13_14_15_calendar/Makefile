@@ -1,6 +1,8 @@
-include .env
+include deployments/.env
 
-BIN := "./bin/calendar"
+BIN_CALENDAR := "./bin/calendar"
+BIN_SCHEDULER := "./bin/scheduler"
+BIN_SENDER := "./bin/sender"
 DOCKER_IMG="calendar:develop"
 
 GIT_HASH := $(shell git log --format="%h" -n 1)
@@ -16,11 +18,25 @@ generate:
 		--go-grpc_out=internal/server/grpc/pb \
 		api/*.proto
 
-build:
-	go build -v -o $(BIN) -ldflags "$(LDFLAGS)" ./cmd/calendar
+build-calendar:
+	go build -v -o $(BIN_CALENDAR) -ldflags "$(LDFLAGS)" ./cmd/calendar
 
-run: build
-	$(BIN) -config ./configs/config.toml
+build-scheduler:
+	go build -v -o $(BIN_SCHEDULER) -ldflags "$(LDFLAGS)" ./cmd/scheduler
+
+build-sender:
+	go build -v -o $(BIN_SENDER) -ldflags "$(LDFLAGS)" ./cmd/sender
+
+build: build-calendar build-scheduler build-sender
+
+run-calendar: build-calendar
+	$(BIN_CALENDAR) -config ./configs/config_calendar.toml
+
+run-scheduler: build-scheduler
+	$(BIN_SCHEDULER) -config ./configs/config_scheduler.toml
+
+run-sender: build-sender
+	$(BIN_SENDER) -config ./configs/config_sender.toml
 
 build-img:
 	docker build \
@@ -31,8 +47,28 @@ build-img:
 run-img: build-img
 	docker run $(DOCKER_IMG)
 
+run-docker-postgres:
+	docker run -d --name $(POSTGRES_CONTAINER) \
+	-e POSTGRES_USER=$(POSTGRES_USER) \
+	-e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) \
+	-e POSTGRES_DB=$(POSTGRES_DB) \
+	-p $(POSTGRES_PORT):5432 \
+	-v postgres-data:/var/lib/postgresql/data \
+	-v $(shell pwd)/deployments/init.sql:/docker-entrypoint-initdb.d/init.sql \
+	postgres:latest
+
+run-docker-rabbitmq:
+	docker run -d --name $(RABBITMQ_CONTAINER) \
+	-p $(RABBITMQ_PORT):5672 \
+	-p $(RABBITMQ_PORT_UI):15672 \
+	-e RABBITMQ_DEFAULT_USER=$(RABBITMQ_USER) \
+	-e RABBITMQ_DEFAULT_PASS=$(RABBITMQ_PASSWORD) \
+	rabbitmq:management
+
 version: build
-	$(BIN) version
+	$(BIN_CALENDAR) version
+	$(BIN_SCHEDULER) version
+	$(BIN_SENDER) version
 
 test:
 	go test -race -count=1 ./internal/...

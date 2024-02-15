@@ -1,18 +1,31 @@
 version: "3"
 
 services:
-
   db:
-    container_name: db
+    container_name: ${POSTGRES_CONTAINER}
     image: postgres
     restart: always
-    env_file:
-      -  ../.env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - pgdata:/var/lib/postgresql/data
+
+  broker:
+    container_name: ${RABBITMQ_CONTAINER}
+    image: rabbitmq:management
+    hostname: rabbitmq
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    ports:
+      - "${RABBITMQ_PORT_UI}:15672"
+      - "${RABBITMQ_PORT}:5672"
 
 volumes:
   pgdata:

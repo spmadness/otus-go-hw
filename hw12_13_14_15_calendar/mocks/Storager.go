@@ -3,8 +3,6 @@
 package mocks
 
 import (
-	context "context"
-
 	storage "github.com/spmadness/otus-go-hw/hw12_13_14_15_calendar/internal/storage"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -14,17 +12,17 @@ type Storager struct {
 	mock.Mock
 }
 
-// Close provides a mock function with given fields: ctx
-func (_m *Storager) Close(ctx context.Context) error {
-	ret := _m.Called(ctx)
+// Close provides a mock function with given fields:
+func (_m *Storager) Close() error {
+	ret := _m.Called()
 
 	if len(ret) == 0 {
 		panic("no return value specified for Close")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -186,17 +184,17 @@ func (_m *Storager) ListEventWeek(date string) ([]storage.Event, error) {
 	return r0, r1
 }
 
-// Open provides a mock function with given fields: ctx
-func (_m *Storager) Open(ctx context.Context) error {
-	ret := _m.Called(ctx)
+// Open provides a mock function with given fields:
+func (_m *Storager) Open() error {
+	ret := _m.Called()
 
 	if len(ret) == 0 {
 		panic("no return value specified for Open")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
 	} else {
 		r0 = ret.Error(0)
 	}

@@ -1,8 +1,6 @@
 package app
 
 import (
-	"context"
-
 	"github.com/spmadness/otus-go-hw/hw12_13_14_15_calendar/internal/storage"
 	memorystorage "github.com/spmadness/otus-go-hw/hw12_13_14_15_calendar/internal/storage/memory"
 	sqlstorage "github.com/spmadness/otus-go-hw/hw12_13_14_15_calendar/internal/storage/sql"
@@ -18,7 +16,10 @@ type App struct {
 	storage Storager
 }
 
-type Logger interface{}
+type Logger interface {
+	Info(msg string)
+	Error(msg string)
+}
 
 type StorageEvent interface {
 	CreateEvent(event storage.Event) error
@@ -31,8 +32,13 @@ type StorageEvent interface {
 }
 
 type StorageConnector interface {
-	Open(ctx context.Context) error
-	Close(ctx context.Context) error
+	Open() error
+	Close() error
+}
+
+type StorageScheduler interface {
+	DeleteEventsBeforeDate(date string) error
+	ListEventWithNotification() ([]storage.Event, error)
 }
 
 type Storager interface {

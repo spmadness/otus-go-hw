@@ -1,7 +1,6 @@
 package memorystorage
 
 import (
-	"context"
 	"sort"
 	"sync"
 	"time"
@@ -202,15 +201,11 @@ func (s *Storage) deleteEvent(id string, e storage.Event) {
 	}
 }
 
-func (s *Storage) Open(ctx context.Context) error {
-	<-ctx.Done()
-
+func (s *Storage) Open() error {
 	return nil
 }
 
-func (s *Storage) Close(ctx context.Context) error {
-	<-ctx.Done()
-
+func (s *Storage) Close() error {
 	return nil
 }
 
